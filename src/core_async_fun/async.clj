@@ -2,24 +2,27 @@
   (:use [clojure.core.async]))
 
 (defn perms
-  [input]
-  (let [c (chan 1)]
+  ([input] (let [c (chan 1)] (go (<! (perms input "" c)) (close! c)) c))
+  ([input prefix c]
     (go
-      (loop [pre ""
-             in  input]
-        (if (empty? in)
-          (>! c pre)
-          (doseq [chosen input]
-            (let [npre   (str pre chosen)
-                  ninput (apply str (filter #(not= chosen %) input))]
-              (recur npre ninput)))))
-      (close! c))
-    c))
+      (if (empty? input)
+        (>! c prefix)
+        (doseq [chosen input]
+          (let [nprefix  (str prefix chosen)
+                ninput   (apply str (filter #(not= chosen %) input))]
+            (<! (perms ninput nprefix c))))))))
 
+(defn channel-to-seq
+  [c]
+  (lazy-seq
+    (when-let [x (<!! c)]
+      (cons x (channel-to-seq c)))))
 
 (defn -main
   [& args]
-  (println (<!! (perms "abc"))))
+  (let [pchan (perms "abcdefghijklmnopqrstuvwxyzABCDEF")]
+    (doseq [x (take 100 (channel-to-seq pchan))]
+      (println x))))
 
 (defn main-old
   "Run the async fun"
