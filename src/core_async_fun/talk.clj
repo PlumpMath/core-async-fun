@@ -31,7 +31,7 @@
 
 (take 10 (standard-perms "1234567890" ""))
 
-(def super-string (apply str (range 700)))
+(def super-string (apply str (take 100 (repeat "1234567890"))))
 
 super-string
 
@@ -157,4 +157,7 @@ super-string
 (take 10 (gen-perms "1234567890" ""))
 
 (take 10 (gen-perms super-string ""))
+
+
+; https://github.com/aengelberg/clj-generators
 
